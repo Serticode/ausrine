@@ -11,9 +11,6 @@ describe('App', () => {
 
   it('renders the tagline', { timeout: 15_000 }, async () => {
     render(<App />);
-    await waitFor(
-      () => expect(screen.getByText('One thing at a time.')).toBeInTheDocument(),
-      { timeout: 12_000 },
-    );
+    await waitFor(() => expect(screen.getByText('One thing at a time.')).toBeInTheDocument(), { timeout: 12_000 });
   });
 });
