@@ -1,0 +1,22 @@
+name: Enforce PR Labels
+
+on:
+  pull_request:
+    types: [opened, labeled, unlabeled, synchronize]
+
+jobs:
+  enforce-labels:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+    steps:
+      - uses: mheap/github-action-required-labels@v6
+        with:
+          mode: minimum
+          count: 1
+          labels: "feature, fix, chore, refactor, docs, style, test, deps"
+          add_comment: true
+          message: |
+            This PR needs at least one label from: `feature`, `fix`, `chore`, `refactor`, `docs`, `style`, `test`, `deps`.
+
+            Add one so the team knows what kind of change this is at a glance.

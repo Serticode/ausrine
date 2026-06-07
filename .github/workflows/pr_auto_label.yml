@@ -1,0 +1,62 @@
+name: Auto Label PR
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  title-label:
+    name: Label from PR title
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - uses: actions/github-script@v9
+        with:
+          script: |
+            const title = context.payload.pull_request.title;
+            const prNumber = context.payload.pull_request.number;
+
+            const typeMap = {
+              feat: 'feature',
+              feature: 'feature',
+              fix: 'fix',
+              hotfix: 'fix',
+              bug: 'fix',
+              chore: 'chore',
+              refactor: 'refactor',
+              docs: 'docs',
+              style: 'style',
+              test: 'test',
+              deps: 'deps',
+              dependabot: 'deps',
+            };
+
+            const prefix = title.match(/^(\w+)/);
+            if (!prefix) return;
+
+            const label = typeMap[prefix[1].toLowerCase()];
+            if (!label) return;
+
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+              labels: [label],
+            });
+
+            console.log(`Applied label: ${label} (from title prefix: ${prefix[1]})`);
+
+  file-label:
+    name: Label from changed files
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/labeler@v6
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          sync-labels: false

@@ -1,0 +1,36 @@
+# Auto label rules; matched against changed files (labeler v6)
+# Branch based labeling is handled inline in pr_auto_label.yml
+
+feature:
+  - any: ['src/domain/**', 'src/data/**', 'src/presentation/**']
+    all: ['!docs/**', '!.github/**', '!*.md']
+
+fix:
+  - any: ['src/**']
+
+chore:
+  - any: ['.github/**', '.gemini/**', '.prettierrc', '.gitignore', 'makefile', 'Makefile']
+
+refactor:
+  - any: ['src/**']
+
+docs:
+  - any: ['docs/**', '*.md']
+
+style:
+  - any: ['src/index.css', 'public/**']
+
+test:
+  - any: ['**/*.test.ts', '**/*.test.tsx', 'vitest.config.ts']
+
+deps:
+  - any: ['package.json', 'package-lock.json']
+
+domain:
+  - any: ['src/domain/**']
+
+data:
+  - any: ['src/data/**']
+
+presentation:
+  - any: ['src/presentation/**']
