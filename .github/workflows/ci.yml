@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: true
+
+jobs:
+  lint-typecheck-test:
+    name: Lint, Typecheck & Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npx tsc -b --noEmit
+
+      - name: Test
+        run: npx vitest run
+
+  ci-passed:
+    name: CI Passed
+    needs: [lint-typecheck-test]
+    if: always() && !cancelled()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check result
+        if: contains(needs.lint-typecheck-test.result, 'failure')
+        run: exit 1

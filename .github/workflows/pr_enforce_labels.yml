@@ -1,0 +1,27 @@
+name: Enforce PR Labels
+
+on:
+  pull_request:
+    types: [opened, labeled, unlabeled, synchronize]
+
+jobs:
+  enforce-labels:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+
+    steps:
+      - uses: actions/github-script@v9
+        with:
+          script: |
+            const { data: labels } = await github.rest.issues.listLabelsOnIssue({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number,
+            });
+
+            if (labels.length === 0) {
+              core.setFailed(
+                'This PR has no labels. Add at least one: feature, fix, chore, refactor, docs, style, test, deps.'
+              );
+            }

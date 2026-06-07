@@ -1,0 +1,174 @@
+have_fun: true
+
+code_review:
+    comment_severity_threshold: MEDIUM
+    max_review_comments: 30
+
+    pull_request_opened:
+        summary: true
+        code_review: true
+
+    pull_request_synchronized:
+        summary: false
+        code_review: true
+
+    ignore_files:
+        - "**/*.generated.*"
+        - "dist/**"
+        - "coverage/**"
+        - "package-lock.json"
+
+    instructions: |
+        You are reviewing Aušrinė — a local-first PWA focus app.
+        Stack: React 19, Vite, TypeScript, Tailwind CSS v4, IndexedDB, Web Audio API.
+        No server. No auth. All data in IndexedDB.
+
+        =========================================================
+        ## 1. CLEAN ARCHITECTURE — LAYER BOUNDARIES (HIGH)
+        =========================================================
+        The dependency graph is enforced. Violations are always HIGH severity.
+
+        - src/domain/ must import NOTHING from React, IndexedDB, or browser APIs
+        - src/data/ implements domain/ interfaces — never defines its own contracts
+        - src/presentation/ must NOT import from data/ directly — go through hooks
+        - Any model that crosses a layer boundary must live in src/domain/models/
+        - Flag: React import inside domain/ — HIGH
+        - Flag: IndexedDB or browser API import inside domain/ — HIGH
+        - Flag: domain/ interface defined outside domain/ — HIGH
+        - Flag: data/ import inside a presentation component — HIGH
+
+        =========================================================
+        ## 2. TYPESCRIPT IDIOMS (severity noted per item)
+        =========================================================
+
+        ### Type system
+        - NEVER use `any`. Use `unknown` + narrowing.
+          Flag: any `any` — HIGH
+        - Use `interface` for object shapes, `type` for unions/primitives.
+        - Nullable fields: `| null`, never `| undefined`.
+          Flag: optional `?` on a domain model field — MEDIUM
+        - `readonly` on all domain model fields and arrays.
+          Flag: mutable domain model field — HIGH
+        - No `as` type assertions on data crossing boundaries. Parse and validate.
+          Flag: `as Task` or `as` cast on external data — HIGH
+
+        ### Exports and imports
+        - Named exports only — no `export default`.
+          Flag: `export default` — MEDIUM
+        - No relative imports beyond one level. Use `@/` path alias.
+          Flag: `../../` import — LOW
+
+        ### Discriminated unions
+        - State modeled as discriminated unions — one variant at a time.
+          BAD: `{ tasks: Task[]; isLoading: boolean; isError: boolean; error: string; }`
+          GOOD: `type TaskState = { status: 'idle' } | { status: 'loading' } | { status: 'success'; data: Task[] } | { status: 'error'; error: string }`
+          Flag: `isLoading`/`isError` booleans bolted onto a data type — HIGH
+        - Use switch for narrowing, include `assertNever` in default branch.
+          Flag: if/else chain on a discriminant — LOW
+
+        ### Error handling
+        - All fallible operations return `Result<T>`.
+          Flag: throw across a layer boundary — HIGH
+        - No nested ternary chains (3+).
+          Flag: nested ternary — LOW
+
+        =========================================================
+        ## 3. REACT PATTERNS
+        =========================================================
+
+        ### Components
+        - Named function components: `export function TaskCard({ task }: TaskCardProps)`
+          Flag: `React.FC` — LOW
+          Flag: default export on a component — MEDIUM
+        - One component per file, filename matches component name.
+        - Explicit props interface: `{ComponentName}Props`.
+        - Components are presentational — state lives in hooks.
+          Flag: `useState`/`useEffect` inside a component file that isn't a hook — MEDIUM
+        - Props: callbacks, not inline business logic.
+          Flag: inline fetch or business logic in a click handler — MEDIUM
+
+        ### State management
+        - Custom hooks — one per concern (`useTasks`, not `useApp`).
+        - Return objects from hooks with >2 values, not tuples.
+        - `useCallback` for stable handlers passed as props.
+        - `useEffect` for I/O on mount, not for derived state.
+          Flag: `useEffect` computing derived state — MEDIUM
+        - Always return cleanup for subscriptions and timers.
+
+        ### Rendering
+        - Switch on state discriminant, never if/else chains.
+        - No index as key.
+          Flag: `key={i}` — MEDIUM
+        - Controlled OR uncontrolled per input — never mix `value` + `defaultValue`.
+        - `useRef` for values that shouldn't trigger re-render.
+
+        =========================================================
+        ## 4. TAILWIND CSS RULES
+        =========================================================
+
+        - NEVER use `@apply` to build semantic classes — extract a React component.
+          Flag: `@apply` in CSS — HIGH
+        - No CSS file per component. One global `src/index.css` for custom effects.
+        - Custom CSS only for things Tailwind can't do: glassmorphism, grain textures, multi-shadow chains, keyframe animations.
+        - Inline `style={{}}` only for truly dynamic values (e.g. data-driven colors).
+        - Duplicated utilities → extract component, not CSS class.
+        - Design tokens in `@theme` block, not scattered CSS custom properties.
+          Flag: hardcoded hex in JSX that matches a design token — LOW
+
+        =========================================================
+        ## 5. DOMAIN RULES
+        =========================================================
+
+        - All model fields `readonly`.
+        - Nullable fields use `| null`, never `| undefined`.
+        - `fromJSON`/`toJSON` as standalone functions for IndexedDB serialization.
+        - Dates serialize to ISO strings, hydrate back to `Date`.
+        - Flag: method on a model interface — MEDIUM
+
+        =========================================================
+        ## 6. USE CASE & REPOSITORY RULES
+        =========================================================
+
+        - One function per file, returns `Result<T>`.
+        - Functions take primitives or models, not framework types.
+        - Repository interfaces in domain/ — abstract, no implementation details.
+        - Repository implementations in data/ — implement domain interfaces.
+        - Caching lives in a dedicated component, not inside the repository.
+        - Flag: use case with more than one responsibility — MEDIUM
+        - Flag: repository implementation in domain/ — HIGH
+
+        =========================================================
+        ## 7. SOLID / DRY / YAGNI / KISS
+        =========================================================
+
+        - SRP: each function/component has one reason to change.
+        - ISP: repository interfaces are minimal — one method per responsibility.
+        - DIP: presentation depends on domain abstractions, not data/ concretions.
+        - DRY: logic duplicated across two files belongs in a shared location.
+        - YAGNI: no abstractions with zero current consumers.
+        - KISS: the simplest correct structure wins.
+        - Flag: speculative abstraction with no consumer — MEDIUM
+        - Flag: logic duplicated across features — MEDIUM
+
+        =========================================================
+        ## 8. CODE STYLE
+        =========================================================
+
+        - Line width: 120 characters (Prettier enforced).
+        - Single quotes (Prettier enforced).
+        - Trailing commas on all multi-line expressions (Prettier enforced).
+        - File names: PascalCase for components, camelCase for hooks/use-cases, kebab-case for feature directories.
+        - Flag: line exceeding 120 characters — LOW
+
+        =========================================================
+        ## SEVERITY SUMMARY
+        =========================================================
+        HIGH   → Layer boundary violation, `any` usage, mutable domain field,
+                 `as` cast on external data, isLoading bolted onto state,
+                 throw across layer boundary, @apply in CSS,
+                 repository implementation in domain/
+        MEDIUM → `export default`, optional nullable field, inline logic in component,
+                 `useEffect` for derived state, index as key, SRP violation,
+                 YAGNI/DRY violation, method on model interface
+        LOW    → `React.FC`, if/else on discriminant, nested ternary,
+                 relative import, hardcoded hex matching a token, line width
