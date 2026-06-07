@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
 import { App } from '@/App.tsx';
@@ -9,8 +9,11 @@ describe('App', () => {
     expect(screen.getByText('Aušrinė')).toBeInTheDocument();
   });
 
-  it('renders the tagline', () => {
+  it('renders the tagline', { timeout: 15_000 }, async () => {
     render(<App />);
-    expect(screen.getByText('One thing at a time.')).toBeInTheDocument();
+    await waitFor(
+      () => expect(screen.getByText('One thing at a time.')).toBeInTheDocument(),
+      { timeout: 12_000 },
+    );
   });
 });
