@@ -1,73 +1,35 @@
-# React + TypeScript + Vite
+# Aušrinė
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A offline first focus sanctuary. One task at a time, before the noise begins.
 
-Currently, two official plugins are available:
+Named after the Lithuanian morning star — the first light at dawn, a single point of brightness before the day floods in.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+---
 
-## React Compiler
+## What it does
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- **One task focus** — dashboard shows a single task, not a list
+- **Brain dump** — pour everything out, break it down later
+- **Daily reset** — clean slate every morning, carryover for what's left
+- **Variable rewards** — rotating sounds and messages so completion stays fresh
+- **New tab, new focus** — lives as your browser's new tab page
+- **100% offline** — all data in IndexedDB, no server, no accounts
 
-## Expanding the ESLint configuration
+## Stack
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+React 19 · Vite · TypeScript · Tailwind CSS v4 · IndexedDB · Web Audio API · PWA
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## Development
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```sh
+make dev      # start dev server
+make build    # typecheck + production bundle
+make test     # run tests once
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Philosophy
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+- Anonymous — `crypto.randomUUID()`, no email, no password
+- offline first; no server, no network requests after load
+- Quiet, not silent; subtle sounds and micro interactions
+- Every pixel earns its place
