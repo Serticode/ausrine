@@ -1,0 +1,23 @@
+# Docs (spec / reference only)
+/docs
+
+# Markdown (except README)
+*.md
+!README.md
+
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+
+# Environment
+.env
+.env.*
+
+# IDE
+*.iml
+.idea/
+
+# OS
+.DS_Store
