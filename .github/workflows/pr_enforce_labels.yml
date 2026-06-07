@@ -9,14 +9,19 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       pull-requests: read
-    steps:
-      - uses: mheap/github-action-required-labels@v6
-        with:
-          mode: minimum
-          count: 1
-          labels: "feature, fix, chore, refactor, docs, style, test, deps"
-          add_comment: true
-          message: |
-            This PR needs at least one label from: `feature`, `fix`, `chore`, `refactor`, `docs`, `style`, `test`, `deps`.
 
-            Add one so the team knows what kind of change this is at a glance.
+    steps:
+      - uses: actions/github-script@v9
+        with:
+          script: |
+            const { data: labels } = await github.rest.issues.listLabelsOnIssue({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number,
+            });
+
+            if (labels.length === 0) {
+              core.setFailed(
+                'This PR has no labels. Add at least one: feature, fix, chore, refactor, docs, style, test, deps.'
+              );
+            }

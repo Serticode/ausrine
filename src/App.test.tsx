@@ -1,0 +1,16 @@
+import { render, screen } from '@testing-library/react';
+import { describe, expect, it } from 'vitest';
+
+import { App } from '@/App.tsx';
+
+describe('App', () => {
+  it('renders the app title', () => {
+    render(<App />);
+    expect(screen.getByText('Aušrinė')).toBeInTheDocument();
+  });
+
+  it('renders the tagline', () => {
+    render(<App />);
+    expect(screen.getByText('One thing at a time.')).toBeInTheDocument();
+  });
+});
