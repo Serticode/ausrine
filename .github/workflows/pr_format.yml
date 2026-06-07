@@ -1,0 +1,74 @@
+name: Format & Fix
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize]
+
+jobs:
+  prettier-format:
+    name: Format with Prettier
+    if: github.actor != 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.head_ref }}
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Check formatting
+        id: format_check
+        run: |
+          npx prettier --check src/ 2>&1 || true
+          if ! npx prettier --check src/ > /dev/null 2>&1; then
+            echo "needs_format=true" >> $GITHUB_OUTPUT
+          else
+            echo "needs_format=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Apply formatting
+        if: steps.format_check.outputs.needs_format == 'true'
+        run: npx prettier --write src/
+
+      - name: Commit formatting
+        id: auto_commit
+        if: steps.format_check.outputs.needs_format == 'true'
+        uses: stefanzweifel/git-auto-commit-action@v7
+        with:
+          commit_message: "style: apply prettier format [skip ci]"
+          commit_author: "github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>"
+
+      - name: Post failure comment
+        if: failure()
+        uses: marocchino/sticky-pull-request-comment@v3
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          header: format-error
+          message: |
+            Hey there 👋
+
+            This PR has formatting issues that couldn't be auto-fixed.
+
+            Run this locally, then push again:
+
+            ```bash
+            npx prettier --write src/
+            ```
+
+      - name: Clear failure comment
+        if: success()
+        uses: marocchino/sticky-pull-request-comment@v3
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          header: format-error
+          delete: true
