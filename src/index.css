@@ -1,0 +1,236 @@
+@import "tailwindcss";
+
+/* ---- Design Tokens ---- */
+@theme {
+  --color-ink-50: #fafafa;
+  --color-ink-100: #f4f4f5;
+  --color-ink-200: #e4e4e7;
+  --color-ink-300: #d4d4d8;
+  --color-ink-400: #a1a1aa;
+  --color-ink-500: #71717a;
+  --color-ink-600: #52525b;
+  --color-ink-700: #3f3f46;
+  --color-ink-800: #27272a;
+  --color-ink-900: #18181b;
+  --color-ink-950: #09090b;
+  --color-paper: #fff;
+
+  --color-note-cream: #ffdf5c;
+  --color-note-banana: #fff09a;
+  --color-note-sand: #ffba7a;
+  --color-note-coral: #ff9b80;
+  --color-note-rose: #ffa8b8;
+  --color-note-blush: #ffcedd;
+  --color-note-lilac: #c0a8ff;
+  --color-note-sky: #8ec9ff;
+  --color-note-aqua: #95dfdc;
+  --color-note-mint: #8de0a6;
+  --color-note-sage: #c0d8a8;
+  --color-note-slate: #cdd2dc;
+
+  --font-sans: "Cabinet Grotesk", -apple-system, BlinkMacSystemFont,
+    "SF Pro Display", "Inter", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", "SF Mono", ui-monospace, Menlo, Consolas,
+    monospace;
+}
+
+/* ---- Base ---- */
+html {
+  background-color: var(--color-paper);
+  color: var(--color-ink-900);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+[data-theme="dark"] {
+  --color-paper: #0b0b0d;
+  --color-ink-50: #131316;
+  --color-ink-100: #1a1a1e;
+  --color-ink-200: #27272a;
+  --color-ink-300: #3f3f46;
+  --color-ink-400: #52525b;
+  --color-ink-500: #71717a;
+  --color-ink-600: #a1a1aa;
+  --color-ink-700: #d4d4d8;
+  --color-ink-800: #e4e4e7;
+  --color-ink-900: #ededf0;
+  --color-ink-950: #f4f4f5;
+}
+
+/* ---- Glass Panel ---- */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: saturate(180%) blur(32px);
+  -webkit-backdrop-filter: saturate(180%) blur(32px);
+  box-shadow:
+    inset 0 1px rgba(255, 255, 255, 0.95),
+    inset 0 0 0 0.5px rgba(255, 255, 255, 0.55),
+    inset 0 -1px 1px rgba(0, 0, 0, 0.04),
+    0 0 0 0.5px rgba(0, 0, 0, 0.06),
+    0 6px 14px -4px rgba(0, 0, 0, 0.08),
+    0 22px 48px -12px rgba(0, 0, 0, 0.18);
+  border-radius: 16px;
+}
+
+[data-theme="dark"] .glass-panel {
+  background: rgba(28, 30, 36, 0.75);
+  box-shadow:
+    inset 0 1px rgba(255, 255, 255, 0.18),
+    inset 0 0 0 0.5px rgba(255, 255, 255, 0.1),
+    inset 0 -1px 1px rgba(0, 0, 0, 0.4),
+    0 0 0 0.5px rgba(255, 255, 255, 0.08),
+    0 6px 14px -4px rgba(0, 0, 0, 0.55),
+    0 22px 48px -12px rgba(0, 0, 0, 0.78);
+}
+
+/* ---- Glass Button ---- */
+.glass-btn {
+  background: rgba(255, 255, 255, 0.35);
+  box-shadow:
+    inset 0 1px rgba(255, 255, 255, 0.9),
+    inset 0 0 0 0.5px rgba(255, 255, 255, 0.5),
+    inset 0 -1px rgba(0, 0, 0, 0.04);
+  transition: background 0.18s;
+  border-radius: 10px;
+}
+
+.glass-btn:hover {
+  background: rgba(255, 255, 255, 0.6);
+}
+
+.glass-btn:active {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+[data-theme="dark"] .glass-btn {
+  background-color: rgba(60, 62, 70, 0.55);
+  box-shadow:
+    inset 0 1px rgba(255, 255, 255, 0.14),
+    inset 0 0 0 0.5px rgba(255, 255, 255, 0.08),
+    inset 0 -1px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .glass-btn:hover {
+  background-color: rgba(85, 88, 96, 0.75);
+}
+
+[data-theme="dark"] .glass-btn:active {
+  background-color: rgba(45, 47, 53, 0.65);
+}
+
+/* ---- Glass Popover / Modal ---- */
+.glass-popover {
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: saturate(220%) blur(40px);
+  -webkit-backdrop-filter: saturate(220%) blur(40px);
+  box-shadow:
+    inset 0 1px rgba(255, 255, 255, 0.95),
+    inset 0 0 0 0.5px rgba(255, 255, 255, 0.6),
+    inset 0 -1px 1px rgba(0, 0, 0, 0.06),
+    0 0 0 0.5px rgba(0, 0, 0, 0.08),
+    0 8px 18px -4px rgba(0, 0, 0, 0.16),
+    0 22px 50px -12px rgba(0, 0, 0, 0.24);
+}
+
+[data-theme="dark"] .glass-popover {
+  background-color: rgba(34, 36, 42, 1);
+  background-image: linear-gradient(
+    rgba(255, 255, 255, 0.12),
+    rgba(255, 255, 255, 0.06),
+    rgba(255, 255, 255, 0.1)
+  );
+  box-shadow:
+    inset 0 1px rgba(255, 255, 255, 0.22),
+    inset 0 0 0 0.5px rgba(255, 255, 255, 0.12),
+    inset 0 -1px 1px rgba(0, 0, 0, 0.42),
+    0 0 0 0.5px rgba(255, 255, 255, 0.1),
+    0 8px 18px -4px rgba(0, 0, 0, 0.6),
+    0 22px 50px -12px rgba(0, 0, 0, 0.82);
+}
+
+/* ---- Shadows ---- */
+.shadow-soft {
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.05),
+    0 6px 14px -4px rgba(0, 0, 0, 0.08),
+    0 16px 36px -12px rgba(0, 0, 0, 0.1);
+}
+
+.shadow-lift {
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.06),
+    0 12px 28px -8px rgba(0, 0, 0, 0.1),
+    0 28px 60px -16px rgba(0, 0, 0, 0.18);
+}
+
+/* ---- Grain Texture ---- */
+.bg-grain {
+  background-image: radial-gradient(
+    circle at 1px 1px,
+    color-mix(in oklab, currentColor 4%, transparent) 1px,
+    transparent 0
+  );
+  background-size: 24px 24px;
+}
+
+[data-theme="dark"] .bg-grain {
+  background-image: radial-gradient(
+    circle at 1px 1px,
+    color-mix(in oklab, currentColor 2%, transparent) 1px,
+    transparent 0
+  );
+  background-size: 24px 24px;
+}
+
+/* ---- Keyframe Animations ---- */
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fade-in-down {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.94); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes scale-up-bounce {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+
+@keyframes slide-out-right {
+  from { opacity: 1; transform: translateX(0); }
+  to { opacity: 0; transform: translateX(24px); }
+}
+
+@keyframes pulse-skeleton {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}
+
+@keyframes checkmark-morph {
+  0% { stroke-dashoffset: 24; transform: rotate(-8deg) scale(0.8); }
+  60% { stroke-dashoffset: 0; transform: rotate(0deg) scale(1.1); }
+  100% { stroke-dashoffset: 0; transform: rotate(0deg) scale(1); }
+}
+
+/* ---- Utility ---- */
+.animate-fade-in { animation: fade-in 0.25s ease-out both; }
+.animate-fade-in-up { animation: fade-in-up 0.3s ease-out both; }
+.animate-fade-in-down { animation: fade-in-down 0.2s ease-out both; }
+.animate-scale-in { animation: scale-in 0.25s ease-out both; }
+.animate-scale-up-bounce { animation: scale-up-bounce 0.2s ease-out both; }
+.animate-slide-out-right { animation: slide-out-right 0.15s ease-in both; }
+.animate-pulse-skeleton { animation: pulse-skeleton 1.6s ease-in-out infinite; }
