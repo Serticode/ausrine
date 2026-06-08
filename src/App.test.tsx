@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
 import { App } from '@/App.tsx';
@@ -6,11 +6,20 @@ import { App } from '@/App.tsx';
 describe('App', () => {
   it('renders the app title', () => {
     render(<App />);
-    expect(screen.getByText('Aušrinė')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Aušrinė' })).toBeInTheDocument();
   });
 
-  it('renders the tagline', { timeout: 15_000 }, async () => {
+  it('renders the header', () => {
     render(<App />);
-    await waitFor(() => expect(screen.getByText('One thing at a time.')).toBeInTheDocument(), { timeout: 12_000 });
+    expect(screen.getByRole('banner')).toBeInTheDocument();
+    expect(screen.getByText(/0 tasks/)).toBeInTheDocument();
+  });
+
+  it('renders the first tagline word-by-word', () => {
+    render(<App />);
+    expect(screen.getByText('Tasks')).toBeInTheDocument();
+    expect(screen.getByText('in')).toBeInTheDocument();
+    expect(screen.getByText('little')).toBeInTheDocument();
+    expect(screen.getByText('chunks.')).toBeInTheDocument();
   });
 });
