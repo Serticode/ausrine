@@ -1,6 +1,6 @@
 @import 'tailwindcss';
 
-/* ---- Fonts ---- */
+/* Fonts */
 @font-face {
   font-family: 'Maison Neue';
   src: url('/fonts/maison-neue-medium.woff2') format('woff2');
@@ -17,21 +17,44 @@
   font-display: swap;
 }
 
-/* ---- Design Tokens ---- */
+/* Design Tokens */
 @theme {
-  --color-ink-50: #fafafa;
-  --color-ink-100: #f4f4f5;
-  --color-ink-200: #e4e4e7;
-  --color-ink-300: #d4d4d8;
-  --color-ink-400: #a1a1aa;
-  --color-ink-500: #71717a;
-  --color-ink-600: #52525b;
-  --color-ink-700: #3f3f46;
-  --color-ink-800: #27272a;
-  --color-ink-900: #18181b;
-  --color-ink-950: #09090b;
-  --color-paper: #fff;
+  /* Solid gold scale — warm cream to deep amber (replaces grayscale ink) */
+  --color-gold-50: #fefdf9;
+  --color-gold-100: #fdf7ed;
+  --color-gold-200: #faf0db;
+  --color-gold-300: #f2e0b8;
+  --color-gold-400: #d4b87a;
+  --color-gold-500: #b8944f;
+  --color-gold-600: #8b6f3b;
+  --color-gold-700: #5c4825;
+  --color-gold-800: #3d3019;
+  --color-gold-900: #211a0e;
+  --color-gold-950: #141008;
 
+  /* Aušrinė gold accent — the sun's rays */
+  --color-ausrine-gold: #e5a93c;
+  --color-ausrine-gold-dark: #b8871e;
+
+  /* Dawn red accent — the thin line of dawn */
+  --color-dawn-400: #f4a08b;
+  --color-dawn-500: #e8755a;
+  --color-dawn-600: #c4523c;
+
+  /* Paper — pure morning light */
+  --color-paper: #fffbf5;
+
+  /* Glass bases — translucent morning mist */
+  --color-glass-white: rgba(255, 255, 255, 0.45);
+  --color-glass-rose: rgba(255, 240, 242, 0.55);
+  --color-glass-gold: rgba(253, 242, 226, 0.6);
+
+  /* Glass borders — pristine hairline reflections */
+  --color-glass-border-white: rgba(255, 255, 255, 0.6);
+  --color-glass-border-rose: rgba(244, 162, 166, 0.4);
+  --color-glass-border-gold: rgba(229, 169, 60, 0.4);
+
+  /* Note tints */
   --color-note-cream: #ffdf5c;
   --color-note-banana: #fff09a;
   --color-note-sand: #ffba7a;
@@ -52,10 +75,17 @@
   --font-mono: 'JetBrains Mono', 'SF Mono', ui-monospace, Menlo, Consolas, monospace;
 }
 
-/* ---- Base ---- */
+/* Glass tokens as CSS custom properties for use in custom classes */
+:root {
+  --glass-blur: blur(12px) saturate(130%);
+  --glass-shadow: 0 8px 32px 0 rgba(39, 39, 42, 0.04);
+}
+
+/* Base */
 html {
+  overscroll-behavior: none;
   background-color: var(--color-paper);
-  color: var(--color-ink-900);
+  color: var(--color-gold-900);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -72,31 +102,29 @@ h6 {
 
 [data-theme='dark'] {
   --color-paper: #0b0b0d;
-  --color-ink-50: #131316;
-  --color-ink-100: #1a1a1e;
-  --color-ink-200: #27272a;
-  --color-ink-300: #3f3f46;
-  --color-ink-400: #52525b;
-  --color-ink-500: #71717a;
-  --color-ink-600: #a1a1aa;
-  --color-ink-700: #d4d4d8;
-  --color-ink-800: #e4e4e7;
-  --color-ink-900: #ededf0;
-  --color-ink-950: #f4f4f5;
+  --color-gold-50: #131316;
+  --color-gold-100: #1a1a1e;
+  --color-gold-200: #27272a;
+  --color-gold-300: #3f3f46;
+  --color-gold-400: #52525b;
+  --color-gold-500: #71717a;
+  --color-gold-600: #a1a1aa;
+  --color-gold-700: #d4d4d8;
+  --color-gold-800: #e4e4e7;
+  --color-gold-900: #ededf0;
+  --color-gold-950: #f4f4f5;
 }
 
-/* ---- Glass Panel ---- */
+/* Glass Panel */
 .glass-panel {
-  background: rgba(255, 255, 255, 0.55);
-  backdrop-filter: saturate(180%) blur(32px);
-  -webkit-backdrop-filter: saturate(180%) blur(32px);
+  background: var(--color-glass-white);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
   box-shadow:
-    inset 0 1px rgba(255, 255, 255, 0.95),
-    inset 0 0 0 0.5px rgba(255, 255, 255, 0.55),
+    inset 0 1px var(--color-glass-border-white),
     inset 0 -1px 1px rgba(0, 0, 0, 0.04),
     0 0 0 0.5px rgba(0, 0, 0, 0.06),
-    0 6px 14px -4px rgba(0, 0, 0, 0.08),
-    0 22px 48px -12px rgba(0, 0, 0, 0.18);
+    var(--glass-shadow);
   border-radius: 16px;
 }
 
@@ -111,19 +139,19 @@ h6 {
     0 22px 48px -12px rgba(0, 0, 0, 0.78);
 }
 
-/* ---- Glass Button ---- */
+/* Glass Button */
 .glass-btn {
-  background: rgba(255, 255, 255, 0.35);
+  background: var(--color-glass-white);
   box-shadow:
     inset 0 1px rgba(255, 255, 255, 0.9),
-    inset 0 0 0 0.5px rgba(255, 255, 255, 0.5),
+    inset 0 0 0 0.5px var(--color-glass-border-white),
     inset 0 -1px rgba(0, 0, 0, 0.04);
   transition: background 0.18s;
   border-radius: 10px;
 }
 
 .glass-btn:hover {
-  background: rgba(255, 255, 255, 0.6);
+  background: var(--color-glass-gold);
 }
 
 .glass-btn:active {
@@ -146,18 +174,18 @@ h6 {
   background-color: rgba(45, 47, 53, 0.65);
 }
 
-/* ---- Glass Popover / Modal ---- */
+/* Glass Popover / Modal */
 .glass-popover {
-  background: rgba(255, 255, 255, 0.75);
+  background: var(--color-glass-white);
   backdrop-filter: saturate(220%) blur(40px);
   -webkit-backdrop-filter: saturate(220%) blur(40px);
   box-shadow:
     inset 0 1px rgba(255, 255, 255, 0.95),
-    inset 0 0 0 0.5px rgba(255, 255, 255, 0.6),
+    inset 0 0 0 0.5px var(--color-glass-border-white),
     inset 0 -1px 1px rgba(0, 0, 0, 0.06),
-    0 0 0 0.5px rgba(0, 0, 0, 0.08),
     0 8px 18px -4px rgba(0, 0, 0, 0.16),
     0 22px 50px -12px rgba(0, 0, 0, 0.24);
+  border-radius: 16px;
 }
 
 [data-theme='dark'] .glass-popover {
@@ -172,7 +200,7 @@ h6 {
     0 22px 50px -12px rgba(0, 0, 0, 0.82);
 }
 
-/* ---- Shadows ---- */
+/* Shadows */
 .shadow-soft {
   box-shadow:
     0 1px 2px rgba(0, 0, 0, 0.05),
@@ -187,11 +215,11 @@ h6 {
     0 28px 60px -16px rgba(0, 0, 0, 0.18);
 }
 
-/* ---- Grain Texture ---- */
+/* Grain Texture */
 .bg-grain {
   background-image: radial-gradient(
     circle at 8px 8px,
-    color-mix(in oklab, currentColor 8%, transparent) 1px,
+    color-mix(in oklab, currentColor 8%, transparent) 6px,
     transparent 0
   );
   background-size: 24px 24px;
@@ -200,13 +228,31 @@ h6 {
 [data-theme='dark'] .bg-grain {
   background-image: radial-gradient(
     circle at 8px 8px,
-    color-mix(in oklab, currentColor 8%, transparent) 1px,
+    color-mix(in oklab, currentColor 8%, transparent) 1.4px,
     transparent 0
   );
   background-size: 16px 16px;
 }
 
-/* ---- Keyframe Animations ---- */
+/* Dot Grid (endless canvas background) */
+.dot-grid {
+  background-image: radial-gradient(
+    circle at 8px 8px,
+    color-mix(in oklab, currentColor 8%, transparent) 1.4px,
+    transparent 0
+  );
+  background-size: 32px 32px;
+}
+
+[data-theme='dark'] .dot-grid {
+  background-image: radial-gradient(
+    circle at 8px 8px,
+    color-mix(in oklab, currentColor 8%, transparent) 1.4px,
+    transparent 0
+  );
+}
+
+/* Keyframe Animations */
 @keyframes fade-in {
   from {
     opacity: 0;
@@ -297,7 +343,7 @@ h6 {
   }
 }
 
-/* ---- Invisible Ink ---- */
+/* Invisible Ink */
 .ink-word {
   opacity: 1;
   transform: translateY(0);
@@ -320,7 +366,7 @@ h6 {
   filter: blur(6px);
 }
 
-/* ---- Utility ---- */
+/* Utility */
 .animate-fade-in {
   animation: fade-in 0.25s ease-out both;
 }
@@ -341,4 +387,56 @@ h6 {
 }
 .animate-pulse-skeleton {
   animation: pulse-skeleton 1.6s ease-in-out infinite;
+}
+
+/* Serticode badge — matches serti0x .nav__logo hover behaviour */
+.serticode-badge {
+  background: rgba(12, 12, 12, 0.55);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+}
+
+.serticode-badge__text {
+  position: relative;
+  color: #c8a96e;
+  letter-spacing: 0.02em;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  transition:
+    letter-spacing 400ms cubic-bezier(0.25, 0.46, 0.45, 0.94),
+    color 250ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.serticode-badge__text::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 1px;
+  background: #c8a96e;
+  transition: width 400ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.serticode-badge:hover .serticode-badge__text {
+  letter-spacing: 0.06em;
+}
+
+.serticode-badge:hover .serticode-badge__text::after {
+  width: 100%;
+}
+
+.serticode-badge__arrow {
+  color: #c8a96e;
+  opacity: 0;
+  transform: translateX(-4px);
+  transition:
+    opacity 200ms cubic-bezier(0.25, 0.46, 0.45, 0.94) 300ms,
+    transform 200ms cubic-bezier(0.25, 0.46, 0.45, 0.94) 300ms;
+}
+
+.serticode-badge:hover .serticode-badge__arrow {
+  opacity: 1;
+  transform: translateX(0);
 }
