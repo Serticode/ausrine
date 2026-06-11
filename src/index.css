@@ -19,22 +19,21 @@
 
 /* Design Tokens */
 @theme {
-  /* Solid gold scale — warm cream to deep amber (replaces grayscale ink) */
-  --color-gold-50: #fefdf9;
-  --color-gold-100: #fdf7ed;
-  --color-gold-200: #faf0db;
-  --color-gold-300: #f2e0b8;
-  --color-gold-400: #d4b87a;
-  --color-gold-500: #b8944f;
-  --color-gold-600: #8b6f3b;
-  --color-gold-700: #5c4825;
-  --color-gold-800: #3d3019;
-  --color-gold-900: #211a0e;
-  --color-gold-950: #141008;
+  /* Warm gold scale — inspired by the favicon's terracotta-gold, used for all text */
+  --color-gold-50: #fef8f0;
+  --color-gold-100: #fdecd9;
+  --color-gold-200: #fad8b3;
+  --color-gold-300: #f0bd85;
+  --color-gold-400: #dba55c;
+  --color-gold-500: #c88a3a;
+  --color-gold-600: #a26d2e;
+  --color-gold-700: #7a5023;
+  --color-gold-800: #4e3419;
+  --color-gold-900: #2d1d10;
+  --color-gold-950: #1a1009;
 
-  /* Aušrinė gold accent — the sun's rays */
-  --color-ausrine-gold: #e5a93c;
-  --color-ausrine-gold-dark: #b8871e;
+  /* Aušrinė gold accent — highlight / interactive elements */
+  --color-ausrine-accent: #da7a3e;
 
   /* Dawn red accent — the thin line of dawn */
   --color-dawn-400: #f4a08b;
@@ -79,6 +78,7 @@
 :root {
   --glass-blur: blur(12px) saturate(130%);
   --glass-shadow: 0 8px 32px 0 rgba(39, 39, 42, 0.04);
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* Base */
@@ -101,18 +101,18 @@ h6 {
 }
 
 [data-theme='dark'] {
-  --color-paper: #0b0b0d;
-  --color-gold-50: #131316;
-  --color-gold-100: #1a1a1e;
-  --color-gold-200: #27272a;
-  --color-gold-300: #3f3f46;
-  --color-gold-400: #52525b;
-  --color-gold-500: #71717a;
-  --color-gold-600: #a1a1aa;
-  --color-gold-700: #d4d4d8;
-  --color-gold-800: #e4e4e7;
-  --color-gold-900: #ededf0;
-  --color-gold-950: #f4f4f5;
+  --color-paper: #0b0908;
+  --color-gold-50: #0f0c0a;
+  --color-gold-100: #17120e;
+  --color-gold-200: #221b15;
+  --color-gold-300: #392e24;
+  --color-gold-400: #4c3d2f;
+  --color-gold-500: #6b5542;
+  --color-gold-600: #8a6f57;
+  --color-gold-700: #b08e6f;
+  --color-gold-800: #d1b393;
+  --color-gold-900: #e6ceb2;
+  --color-gold-950: #f2e2cc;
 }
 
 /* Glass Panel */
@@ -287,7 +287,7 @@ h6 {
 @keyframes scale-in {
   from {
     opacity: 0;
-    transform: scale(0.94);
+    transform: scale(0.95);
   }
   to {
     opacity: 1;
@@ -366,27 +366,56 @@ h6 {
   filter: blur(6px);
 }
 
+/* Toolbar pill — floating glass bar (replaces inline styles) */
+.toolbar-pill {
+  background: var(--color-glass-white);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  box-shadow:
+    inset 0 1px var(--color-glass-border-white),
+    inset 0 -1px 1px rgba(0, 0, 0, 0.04),
+    0 0 0 0.5px rgba(0, 0, 0, 0.06),
+    var(--glass-shadow);
+  border-radius: 9999px;
+}
+
+[data-theme='dark'] .toolbar-pill {
+  background: rgba(28, 30, 36, 0.75);
+  box-shadow:
+    inset 0 1px rgba(255, 255, 255, 0.18),
+    inset 0 0 0 0.5px rgba(255, 255, 255, 0.1),
+    inset 0 -1px 1px rgba(0, 0, 0, 0.4),
+    0 0 0 0.5px rgba(255, 255, 255, 0.08),
+    0 6px 14px -4px rgba(0, 0, 0, 0.55),
+    0 22px 48px -12px rgba(0, 0, 0, 0.78);
+}
+
 /* Utility */
 .animate-fade-in {
-  animation: fade-in 0.25s ease-out both;
+  animation: fade-in 0.25s var(--ease-out-expo) both;
 }
 .animate-fade-in-up {
-  animation: fade-in-up 0.3s ease-out both;
+  animation: fade-in-up 0.3s var(--ease-out-expo) both;
 }
 .animate-fade-in-down {
-  animation: fade-in-down 0.2s ease-out both;
+  animation: fade-in-down 0.2s var(--ease-out-expo) both;
 }
 .animate-scale-in {
-  animation: scale-in 0.25s ease-out both;
+  animation: scale-in 0.25s var(--ease-out-expo) both;
 }
 .animate-scale-up-bounce {
-  animation: scale-up-bounce 0.2s ease-out both;
+  animation: scale-up-bounce 0.2s var(--ease-out-expo) both;
 }
 .animate-slide-out-right {
   animation: slide-out-right 0.15s ease-in both;
 }
 .animate-pulse-skeleton {
   animation: pulse-skeleton 1.6s ease-in-out infinite;
+}
+
+/* Stagger children — apply to container, children use transition-delay via style */
+.stagger-items > * {
+  animation: fade-in-up 0.3s var(--ease-out-expo) both;
 }
 
 /* Serticode badge — matches serti0x .nav__logo hover behaviour */
