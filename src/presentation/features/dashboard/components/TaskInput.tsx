@@ -36,7 +36,7 @@ export function TaskInput({ onSubmit, onCancel }: TaskInputProps) {
         onKeyDown={handleKeyDown}
         placeholder="A small thing to do… (2–5 min)"
         autoFocus
-        className="w-full bg-transparent text-[15px] tracking-[-0.01em] text-gold-900 placeholder:text-gold-400 outline-none"
+        className="w-full bg-transparent text-[15px] tracking-[-0.01em] text-gold-900 placeholder:text-gold-400 outline-none focus:ring-2 focus:ring-gold-300 rounded"
       />
       <div className="mt-3 flex items-center justify-between">
         <div className="flex gap-1">

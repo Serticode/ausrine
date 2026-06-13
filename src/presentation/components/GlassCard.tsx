@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { GlassPanel } from '@/presentation/components/GlassPanel.tsx';
 
 interface GlassCardProps {
   readonly children: ReactNode;
@@ -9,12 +10,12 @@ interface GlassCardProps {
 
 export function GlassCard({ children, onClick, className = '', style }: GlassCardProps) {
   return (
-    <div
-      className={`glass-panel ${onClick ? 'cursor-pointer hover:shadow-lift transition-shadow duration-200' : ''} ${className}`}
-      onClick={onClick}
+    <GlassPanel
+      className={`${onClick ? 'cursor-pointer hover:shadow-lift transition-shadow duration-200' : ''} ${className}`}
       style={style}
+      onClick={onClick}
     >
       {children}
-    </div>
+    </GlassPanel>
   );
 }

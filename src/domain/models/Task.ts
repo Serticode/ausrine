@@ -12,9 +12,7 @@ export interface Task {
   readonly canvasY: number;
   readonly body: string | null;
   readonly completedAt: Date | null;
-  readonly estimatedMinutes: number | null;
   readonly parentTaskId: string | null;
-  readonly tags: readonly string[] | null;
 }
 
 export function taskToJSON(task: Task): TaskJSON {
@@ -30,9 +28,7 @@ export function taskToJSON(task: Task): TaskJSON {
     canvasY: task.canvasY,
     body: task.body,
     completedAt: task.completedAt?.toISOString() ?? null,
-    estimatedMinutes: task.estimatedMinutes,
     parentTaskId: task.parentTaskId,
-    tags: task.tags,
   };
 }
 
@@ -56,7 +52,5 @@ export interface TaskJSON {
   readonly canvasY: number;
   readonly body: string | null;
   readonly completedAt: string | null;
-  readonly estimatedMinutes: number | null;
   readonly parentTaskId: string | null;
-  readonly tags: readonly string[] | null;
 }

@@ -2,10 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 
 import type { Task } from '@/domain/models/Task.ts';
 import type { NoteColor } from '@/domain/models/NoteColor.ts';
-import { createTask as makeCreateTask } from '@/domain/use-cases/createTask.ts';
-import { getDailyTasks as makeGetDailyTasks } from '@/domain/use-cases/getDailyTasks.ts';
-import { completeTask as makeCompleteTask } from '@/domain/use-cases/completeTask.ts';
-import { IndexedDbTaskRepository } from '@/data/repositories/IndexedDbTaskRepository.ts';
+import type { Result } from '@/domain/models/Result.ts';
 
 export type TasksState =
   | { status: 'idle' }
@@ -13,31 +10,55 @@ export type TasksState =
   | { status: 'success'; tasks: readonly Task[] }
   | { status: 'error'; error: string };
 
-const taskRepo = new IndexedDbTaskRepository();
-const createTaskUseCase = makeCreateTask(taskRepo);
-const getDailyTasksUseCase = makeGetDailyTasks(taskRepo);
-const completeTaskUseCase = makeCompleteTask(taskRepo);
+const DEFAULT_BOARD_ID_KEY = 'ausrine-default-board-id';
 
-const DEFAULT_BOARD_ID = crypto.randomUUID();
+function getDefaultBoardId(): string {
+  try {
+    const stored = localStorage.getItem(DEFAULT_BOARD_ID_KEY);
+    if (stored) return stored;
+  } catch {
+    /* localStorage unavailable */
+  }
+  const id = crypto.randomUUID();
+  try {
+    localStorage.setItem(DEFAULT_BOARD_ID_KEY, id);
+  } catch {
+    /* localStorage unavailable */
+  }
+  return id;
+}
 
-export function useTasks() {
+const DEFAULT_BOARD_ID = getDefaultBoardId();
+
+interface UseTasksDeps {
+  readonly createTask: (input: {
+    readonly title: string;
+    readonly color: NoteColor;
+    readonly boardId: string;
+    readonly position: number;
+  }) => Promise<Result<Task>>;
+  readonly getDailyTasks: (boardId: string) => Promise<Result<readonly Task[]>>;
+  readonly completeTask: (task: Task) => Promise<Result<Task>>;
+}
+
+export function useTasks({ createTask, getDailyTasks, completeTask }: UseTasksDeps) {
   const [state, setState] = useState<TasksState>({ status: 'idle' });
   const tasksRef = useRef<readonly Task[]>([]);
 
   const load = useCallback(async () => {
     setState({ status: 'loading' });
-    const result = await getDailyTasksUseCase(DEFAULT_BOARD_ID);
+    const result = await getDailyTasks(DEFAULT_BOARD_ID);
     if (result.ok) {
       tasksRef.current = result.value;
       setState({ status: 'success', tasks: result.value });
     } else {
       setState({ status: 'error', error: result.error });
     }
-  }, []);
+  }, [getDailyTasks]);
 
   const addTask = useCallback(
     async (title: string, color: NoteColor) => {
-      const result = await createTaskUseCase({
+      const result = await createTask({
         title,
         color,
         boardId: DEFAULT_BOARD_ID,
@@ -48,18 +69,18 @@ export function useTasks() {
       }
       return result;
     },
-    [load],
+    [createTask, load],
   );
 
   const finishTask = useCallback(
     async (task: Task) => {
-      const result = await completeTaskUseCase(task);
+      const result = await completeTask(task);
       if (result.ok) {
         await load();
       }
       return result;
     },
-    [load],
+    [completeTask, load],
   );
 
   useEffect(() => {

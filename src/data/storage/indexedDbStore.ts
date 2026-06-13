@@ -7,8 +7,6 @@ export type StoreSchema = Record<string, string[]>;
 
 const SCHEMA: StoreSchema = {
   tasks: ['boardId', 'isDone', 'createdAt'],
-  boards: ['isArchived'],
-  config: [],
 };
 
 export class IndexedDbStore {

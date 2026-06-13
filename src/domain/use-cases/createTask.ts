@@ -11,7 +11,6 @@ interface CreateTaskInput {
   readonly canvasX?: number;
   readonly canvasY?: number;
   readonly body?: string | null;
-  readonly estimatedMinutes?: number | null;
   readonly parentTaskId?: string | null;
 }
 
@@ -32,9 +31,7 @@ export function createTask(taskRepo: TaskRepository) {
       canvasY: input.canvasY ?? 0,
       body: input.body ?? null,
       completedAt: null,
-      estimatedMinutes: input.estimatedMinutes ?? null,
       parentTaskId: input.parentTaskId ?? null,
-      tags: null,
     };
 
     const result = await taskRepo.save(task);

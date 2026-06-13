@@ -413,6 +413,15 @@ h6 {
   animation: pulse-skeleton 1.6s ease-in-out infinite;
 }
 
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
 /* Stagger children — apply to container, children use transition-delay via style */
 .stagger-items > * {
   animation: fade-in-up 0.3s var(--ease-out-expo) both;

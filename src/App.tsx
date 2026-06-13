@@ -1,4 +1,4 @@
-import { useCallback, useState, useEffect } from 'react';
+import { useCallback, useState } from 'react';
 
 import { AppHeader } from '@/presentation/components/AppHeader.tsx';
 import { EndlessCanvas } from '@/presentation/components/EndlessCanvas.tsx';
@@ -8,12 +8,12 @@ import { ToolBar } from '@/presentation/components/ToolBar.tsx';
 import { usePhraseCycle } from '@/presentation/core/usePhraseCycle.ts';
 import { useNotes } from '@/presentation/core/useNotes.ts';
 import { useTheme } from '@/presentation/core/useTheme.ts';
+import { useDatabase } from '@/presentation/core/useDatabase.ts';
 import { useTasks } from '@/presentation/features/dashboard/hooks/useTasks.ts';
 import { useReward } from '@/presentation/features/dashboard/hooks/useReward.ts';
 import { DashboardScreen } from '@/presentation/features/dashboard/DashboardScreen.tsx';
 import { TaskInput } from '@/presentation/features/dashboard/components/TaskInput.tsx';
 import { BrainDump } from '@/presentation/features/dashboard/components/BrainDump.tsx';
-import { dbStore } from '@/data/storage/indexedDbStore.ts';
 import { brainDump as parseBrainDump } from '@/domain/use-cases/brainDump.ts';
 import type { NoteColor } from '@/domain/models/NoteColor.ts';
 
@@ -26,17 +26,15 @@ export function App() {
   const { phraseIndex, phase, words } = usePhraseCycle();
   const { notes, addNote, moveNote } = useNotes();
   const { isDark, toggleTheme } = useTheme();
-  const { state, addTask, finishTask } = useTasks();
+  const { dbReady, createTaskUseCase, getDailyTasksUseCase, completeTaskUseCase } = useDatabase();
+  const { state, addTask, finishTask } = useTasks({
+    createTask: createTaskUseCase,
+    getDailyTasks: getDailyTasksUseCase,
+    completeTask: completeTaskUseCase,
+  });
   const { message: rewardMessage, trigger: triggerReward, dismiss: dismissReward } = useReward();
 
-  const [dbReady, setDbReady] = useState(false);
   const [activeTool, setActiveTool] = useState<ActiveTool>('add');
-
-  useEffect(() => {
-    dbStore.open().then((result) => {
-      if (result.ok) setDbReady(true);
-    });
-  }, []);
 
   const handleCanvasDoubleClick = useCallback(
     (worldX: number, worldY: number) => {
