@@ -7,9 +7,12 @@ export interface Task {
   readonly boardId: string;
   readonly createdAt: Date;
   readonly isDone: boolean;
+  readonly isTodo: boolean;
   readonly position: number;
   readonly canvasX: number;
   readonly canvasY: number;
+  readonly noteWidth: number | null;
+  readonly noteHeight: number | null;
   readonly body: string | null;
   readonly completedAt: Date | null;
   readonly parentTaskId: string | null;
@@ -23,9 +26,12 @@ export function taskToJSON(task: Task): TaskJSON {
     boardId: task.boardId,
     createdAt: task.createdAt.toISOString(),
     isDone: task.isDone,
+    isTodo: task.isTodo,
     position: task.position,
     canvasX: task.canvasX,
     canvasY: task.canvasY,
+    noteWidth: task.noteWidth,
+    noteHeight: task.noteHeight,
     body: task.body,
     completedAt: task.completedAt?.toISOString() ?? null,
     parentTaskId: task.parentTaskId,
@@ -47,9 +53,12 @@ export interface TaskJSON {
   readonly boardId: string;
   readonly createdAt: string;
   readonly isDone: boolean;
+  readonly isTodo: boolean;
   readonly position: number;
   readonly canvasX: number;
   readonly canvasY: number;
+  readonly noteWidth: number | null;
+  readonly noteHeight: number | null;
   readonly body: string | null;
   readonly completedAt: string | null;
   readonly parentTaskId: string | null;

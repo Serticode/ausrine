@@ -413,6 +413,55 @@ h6 {
   animation: pulse-skeleton 1.6s ease-in-out infinite;
 }
 
+/* ContentEditable placeholder */
+[contenteditable]:empty:before {
+  content: attr(data-placeholder);
+  color: var(--color-gold-400);
+  pointer-events: none;
+}
+
+/* Rich body — contentEditable formatting */
+.rich-body {
+  min-height: 1.5em;
+}
+
+.rich-body b,
+.rich-body strong {
+  font-weight: 700;
+}
+
+.rich-body i,
+.rich-body em {
+  font-style: italic;
+}
+
+.rich-body ul,
+.rich-body ol {
+  margin: 0.1em 0;
+  padding-left: 1.25em;
+}
+
+.rich-body ul {
+  list-style: disc;
+}
+
+.rich-body ol {
+  list-style: decimal;
+}
+
+.rich-body li {
+  padding-left: 0.15em;
+}
+
+.rich-body li::marker {
+  color: var(--color-gold-400);
+}
+
+.rich-body div + div,
+.rich-body p + p {
+  margin-top: 0.05em;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

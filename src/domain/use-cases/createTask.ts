@@ -10,8 +10,11 @@ interface CreateTaskInput {
   readonly position: number;
   readonly canvasX?: number;
   readonly canvasY?: number;
+  readonly noteWidth?: number | null;
+  readonly noteHeight?: number | null;
   readonly body?: string | null;
   readonly parentTaskId?: string | null;
+  readonly isTodo?: boolean;
 }
 
 export function createTask(taskRepo: TaskRepository) {
@@ -26,9 +29,12 @@ export function createTask(taskRepo: TaskRepository) {
       boardId: input.boardId,
       createdAt: new Date(),
       isDone: false,
+      isTodo: input.isTodo ?? true,
       position: input.position,
       canvasX: input.canvasX ?? 0,
       canvasY: input.canvasY ?? 0,
+      noteWidth: input.noteWidth ?? null,
+      noteHeight: input.noteHeight ?? null,
       body: input.body ?? null,
       completedAt: null,
       parentTaskId: input.parentTaskId ?? null,

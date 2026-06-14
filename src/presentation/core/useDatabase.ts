@@ -4,6 +4,8 @@ import { IndexedDbTaskRepository } from '@/data/repositories/IndexedDbTaskReposi
 import { createTask as makeCreateTask } from '@/domain/use-cases/createTask.ts';
 import { getDailyTasks as makeGetDailyTasks } from '@/domain/use-cases/getDailyTasks.ts';
 import { completeTask as makeCompleteTask } from '@/domain/use-cases/completeTask.ts';
+import { saveTask as makeSaveTask } from '@/domain/use-cases/saveTask.ts';
+import { getActiveTasks as makeGetActiveTasks } from '@/domain/use-cases/getActiveTasks.ts';
 
 export function useDatabase() {
   const [dbReady, setDbReady] = useState(false);
@@ -19,6 +21,15 @@ export function useDatabase() {
   const createTaskUseCase = useMemo(() => makeCreateTask(taskRepo), [taskRepo]);
   const getDailyTasksUseCase = useMemo(() => makeGetDailyTasks(taskRepo), [taskRepo]);
   const completeTaskUseCase = useMemo(() => makeCompleteTask(taskRepo), [taskRepo]);
+  const saveTaskUseCase = useMemo(() => makeSaveTask(taskRepo), [taskRepo]);
+  const getActiveTasksUseCase = useMemo(() => makeGetActiveTasks(taskRepo), [taskRepo]);
 
-  return { dbReady, createTaskUseCase, getDailyTasksUseCase, completeTaskUseCase };
+  return {
+    dbReady,
+    createTaskUseCase,
+    getDailyTasksUseCase,
+    completeTaskUseCase,
+    saveTaskUseCase,
+    getActiveTasksUseCase,
+  };
 }

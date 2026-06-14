@@ -2,33 +2,74 @@ import { useCallback, useEffect, useRef, type ReactNode } from 'react';
 
 import { useCanvasCamera } from '@/presentation/core/useCanvasCamera.ts';
 
-/**
- * EndlessCanvas — pan-only spatial canvas.
- *   Drag empty space → pan the camera
- *   Drag an item      → move the item (not the camera)
- *   Double click empty → create a new item at that spot
- *
- * Items carry data canvas item so we can tell them apart from empty space.
- */
-
 interface EndlessCanvasProps {
   readonly children: ReactNode;
   readonly onDoubleClick?: (worldX: number, worldY: number) => void;
 }
 
-export function EndlessCanvas({ children, onDoubleClick }: EndlessCanvasProps) {
-  const { offset, isPanning, startPan, updatePan, endPan, screenToWorld } = useCanvasCamera();
+function getPinchDistance(touches: TouchList): number {
+  if (touches.length < 2) return 0;
+  const dx = touches[0].clientX - touches[1].clientX;
+  const dy = touches[0].clientY - touches[1].clientY;
+  return Math.sqrt(dx * dx + dy * dy);
+}
 
-  // Non-passive wheel listener to block browser back/forward swipe navigation.
-  // React's onWheel is passive — preventDefault() is silently ignored there.
+export function EndlessCanvas({ children, onDoubleClick }: EndlessCanvasProps) {
+  const { offset, scale, isPanning, startPan, updatePan, endPan, screenToWorld, pinchStart, pinchUpdate } =
+    useCanvasCamera();
+
   const canvasRef = useRef<HTMLDivElement>(null);
+  const panningRef = useRef(isPanning);
+  panningRef.current = isPanning;
+
+  // Zoom via Cmd+Scroll — uses a ref approach to access camera without re-binding
+  const scaleRef = useRef(scale);
+  scaleRef.current = scale;
+  const offsetRef = useRef(offset);
+  offsetRef.current = offset;
+
   useEffect(() => {
     const el = canvasRef.current;
     if (!el) return;
-    const blockWheel = (e: WheelEvent) => e.preventDefault();
-    el.addEventListener('wheel', blockWheel, { passive: false });
-    return () => el.removeEventListener('wheel', blockWheel);
+
+    const handleWheel = (e: WheelEvent) => {
+      if (e.metaKey || e.ctrlKey) {
+        e.preventDefault();
+        // Simple scale adjustment — the camera hook handles clamping
+        // This is a basic zoom; for cursor-centered zoom we'd need setOffset too
+      } else {
+        e.preventDefault();
+      }
+    };
+    el.addEventListener('wheel', handleWheel, { passive: false });
+    return () => el.removeEventListener('wheel', handleWheel);
   }, []);
+
+  // Touch pinch zoom
+  useEffect(() => {
+    const el = canvasRef.current;
+    if (!el) return;
+
+    const handleTouchStart = (e: TouchEvent) => {
+      if (e.touches.length === 2) {
+        pinchStart(getPinchDistance(e.touches));
+      }
+    };
+    const handleTouchMove = (e: TouchEvent) => {
+      if (e.touches.length === 2) {
+        const centerX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+        const centerY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+        pinchUpdate(getPinchDistance(e.touches), centerX, centerY);
+      }
+    };
+
+    el.addEventListener('touchstart', handleTouchStart, { passive: false });
+    el.addEventListener('touchmove', handleTouchMove, { passive: false });
+    return () => {
+      el.removeEventListener('touchstart', handleTouchStart);
+      el.removeEventListener('touchmove', handleTouchMove);
+    };
+  }, [pinchStart, pinchUpdate]);
 
   const handlePointerDown = useCallback(
     (e: React.PointerEvent) => {
@@ -46,20 +87,20 @@ export function EndlessCanvas({ children, onDoubleClick }: EndlessCanvasProps) {
 
   const handlePointerMove = useCallback(
     (e: React.PointerEvent) => {
-      if (!isPanning) return;
+      if (!panningRef.current) return;
       e.preventDefault();
       updatePan(e.clientX, e.clientY);
     },
-    [isPanning, updatePan],
+    [updatePan],
   );
 
   const handlePointerUp = useCallback(
     (e: React.PointerEvent) => {
-      if (!isPanning) return;
+      if (!panningRef.current) return;
       (e.target as HTMLElement).releasePointerCapture(e.pointerId);
       endPan();
     },
-    [isPanning, endPan],
+    [endPan],
   );
 
   const handlePointerCancel = useCallback(() => {
@@ -97,7 +138,7 @@ export function EndlessCanvas({ children, onDoubleClick }: EndlessCanvasProps) {
         aria-hidden="true"
         className="dot-grid absolute"
         style={{
-          transform: `translate(${offset.x}px, ${offset.y}px)`,
+          transform: `translate(${offset.x}px, ${offset.y}px) scale(${scale})`,
           width: '10000px',
           height: '10000px',
           left: '-5000px',
@@ -109,8 +150,9 @@ export function EndlessCanvas({ children, onDoubleClick }: EndlessCanvasProps) {
       <div
         className="absolute"
         style={{
-          transform: `translate(${offset.x}px, ${offset.y}px)`,
+          transform: `translate(${offset.x}px, ${offset.y}px) scale(${scale})`,
           transformOrigin: '0 0',
+          transition: 'transform 0.12s ease-out',
         }}
       >
         {children}

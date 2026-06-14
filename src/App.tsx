@@ -1,46 +1,114 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useState, useRef, useEffect } from 'react';
 
 import { AppHeader } from '@/presentation/components/AppHeader.tsx';
 import { EndlessCanvas } from '@/presentation/components/EndlessCanvas.tsx';
-import { CanvasItem } from '@/presentation/components/CanvasItem.tsx';
+import { CanvasNote } from '@/presentation/components/CanvasNote.tsx';
+import { TrashZone } from '@/presentation/components/TrashZone.tsx';
+import { CanvasSwitcher } from '@/presentation/components/CanvasSwitcher.tsx';
+import { ArchiveDrawer } from '@/presentation/components/ArchiveDrawer.tsx';
+import { TourOverlay } from '@/presentation/components/TourOverlay.tsx';
+import { ShortcutsPanel } from '@/presentation/components/ShortcutsPanel.tsx';
 import { SerticodeBadge } from '@/presentation/components/SerticodeBadge.tsx';
 import { ToolBar } from '@/presentation/components/ToolBar.tsx';
 import { usePhraseCycle } from '@/presentation/core/usePhraseCycle.ts';
-import { useNotes } from '@/presentation/core/useNotes.ts';
 import { useTheme } from '@/presentation/core/useTheme.ts';
 import { useDatabase } from '@/presentation/core/useDatabase.ts';
+import { useTour } from '@/presentation/core/useTour.ts';
 import { useTasks } from '@/presentation/features/dashboard/hooks/useTasks.ts';
 import { useReward } from '@/presentation/features/dashboard/hooks/useReward.ts';
-import { DashboardScreen } from '@/presentation/features/dashboard/DashboardScreen.tsx';
 import { TaskInput } from '@/presentation/features/dashboard/components/TaskInput.tsx';
 import { BrainDump } from '@/presentation/features/dashboard/components/BrainDump.tsx';
 import { brainDump as parseBrainDump } from '@/domain/use-cases/brainDump.ts';
 import type { NoteColor } from '@/domain/models/NoteColor.ts';
+import type { Task } from '@/domain/models/Task.ts';
 
 const STAGGER_ENTER = 25;
 const STAGGER_EXIT = 25.5;
+const UNDO_TIMEOUT_MS = 5000;
 
-type ActiveTool = 'add' | 'braindump' | 'dashboard' | null;
+type ActiveTool = 'add' | 'braindump' | null;
+
+function daysSince(date: Date): number {
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
+  const then = new Date(date);
+  then.setHours(0, 0, 0, 0);
+  return Math.floor((now.getTime() - then.getTime()) / 86400000);
+}
 
 export function App() {
   const { phraseIndex, phase, words } = usePhraseCycle();
-  const { notes, addNote, moveNote } = useNotes();
   const { isDark, toggleTheme } = useTheme();
-  const { dbReady, createTaskUseCase, getDailyTasksUseCase, completeTaskUseCase } = useDatabase();
-  const { state, addTask, finishTask } = useTasks({
+  const { dbReady, createTaskUseCase, getActiveTasksUseCase, completeTaskUseCase, saveTaskUseCase } = useDatabase();
+  const {
+    state,
+    addTask,
+    finishTask,
+    moveTask,
+    updateTaskSize,
+    updateTask,
+    removeTask,
+    undoRemoveTask,
+    boards,
+    activeBoardId,
+    activeBoard,
+    addBoard,
+    switchBoard,
+    archivedTasks,
+  } = useTasks({
     createTask: createTaskUseCase,
-    getDailyTasks: getDailyTasksUseCase,
+    getActiveTasks: getActiveTasksUseCase,
     completeTask: completeTaskUseCase,
+    saveTask: saveTaskUseCase,
   });
   const { message: rewardMessage, trigger: triggerReward, dismiss: dismissReward } = useReward();
 
-  const [activeTool, setActiveTool] = useState<ActiveTool>('add');
+  const [activeTool, setActiveTool] = useState<ActiveTool>(null);
+
+  // Drag-to-trash
+  const [draggingId, setDraggingId] = useState<string | null>(null);
+  const [isOverTrash, setIsOverTrash] = useState(false);
+
+  // Undo toast
+  const [undoTask, setUndoTask] = useState<Task | null>(null);
+  const undoTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Archive drawer
+  const [archiveOpen, setArchiveOpen] = useState(false);
+
+  // Tour
+  const tour = useTour();
+
+  // Keyboard shortcuts
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === '?' && !e.metaKey && !e.ctrlKey) {
+        e.preventDefault();
+        setShortcutsOpen((v) => !v);
+      }
+      if (e.key === 'Escape') {
+        setShortcutsOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (undoTimeoutRef.current) clearTimeout(undoTimeoutRef.current);
+    };
+  }, []);
+
+  const tasks = state.status === 'success' ? state.tasks : [];
 
   const handleCanvasDoubleClick = useCallback(
-    (worldX: number, worldY: number) => {
-      addNote(worldX, worldY, words.join(' '));
+    async (worldX: number, worldY: number) => {
+      await addTask('', 'cream', worldX, worldY);
     },
-    [addNote, words],
+    [addTask],
   );
 
   const handleAddTask = useCallback(
@@ -54,12 +122,65 @@ export function App() {
   );
 
   const handleComplete = useCallback(
-    async (task: Parameters<typeof finishTask>[0]) => {
+    async (task: Task) => {
       await finishTask(task);
       triggerReward();
     },
     [finishTask, triggerReward],
   );
+
+  const handleSaveNote = useCallback(
+    async (task: Task) => {
+      await updateTask(task);
+    },
+    [updateTask],
+  );
+
+  const handleToggleTodo = useCallback(
+    async (task: Task) => {
+      await updateTask(task);
+    },
+    [updateTask],
+  );
+
+  const handleDelete = useCallback(
+    async (task: Task) => {
+      await removeTask(task);
+      setUndoTask(task);
+      if (undoTimeoutRef.current) clearTimeout(undoTimeoutRef.current);
+      undoTimeoutRef.current = setTimeout(() => setUndoTask(null), UNDO_TIMEOUT_MS);
+    },
+    [removeTask],
+  );
+
+  const handleUndo = useCallback(() => {
+    if (undoTimeoutRef.current) clearTimeout(undoTimeoutRef.current);
+    undoRemoveTask();
+    setUndoTask(null);
+  }, [undoRemoveTask]);
+
+  const handleDragStart = useCallback((id: string) => {
+    setDraggingId(id);
+    setIsOverTrash(false);
+  }, []);
+
+  const handleDragEnd = useCallback(
+    (id: string) => {
+      setDraggingId(null);
+      if (isOverTrash) {
+        const task = tasks.find((t) => t.id === id);
+        if (task) {
+          handleDelete(task);
+        }
+      }
+      setIsOverTrash(false);
+    },
+    [isOverTrash, tasks, handleDelete],
+  );
+
+  const handleDragOver = useCallback((clientY: number) => {
+    setIsOverTrash(clientY > window.innerHeight - 80);
+  }, []);
 
   const handleBrainDumpSubmit = useCallback(
     async (candidates: ReturnType<typeof parseBrainDump>) => {
@@ -71,22 +192,29 @@ export function App() {
     [addTask],
   );
 
-  const tasks = state.status === 'success' ? state.tasks : [];
-
   return (
     <div className="relative min-h-dvh bg-paper text-gold-900">
       <EndlessCanvas onDoubleClick={handleCanvasDoubleClick}>
-        {notes.map((note) => (
-          <CanvasItem key={note.id} x={note.x} y={note.y} onMove={(nx, ny) => moveNote(note.id, nx, ny)}>
-            <div className="glass-panel min-w-[140px] max-w-[220px] px-4 py-3" style={{ backgroundColor: note.tint }}>
-              <p className="text-[14px] leading-snug tracking-[-0.01em] text-gold-900">{note.text}</p>
-            </div>
-          </CanvasItem>
+        {tasks.map((task) => (
+          <CanvasNote
+            key={task.id}
+            task={task}
+            daysOld={daysSince(task.createdAt)}
+            onMove={moveTask}
+            onResize={updateTaskSize}
+            onSave={handleSaveNote}
+            onComplete={handleComplete}
+            onDelete={handleDelete}
+            onToggleTodo={handleToggleTodo}
+            onDragStart={handleDragStart}
+            onDragEnd={handleDragEnd}
+            onDragOver={handleDragOver}
+          />
         ))}
       </EndlessCanvas>
 
-      {/* Phrase cycle — centered overlay (hidden when dashboard is active) */}
-      {activeTool !== 'dashboard' && (
+      {/* Phrase cycle — centered overlay (hidden when canvas has content) */}
+      {tasks.length === 0 && (
         <div className="pointer-events-none absolute inset-0 z-0 flex items-center justify-center">
           <div className="flex flex-col items-center text-center">
             <h1 className="font-heading text-[24px] font-normal tracking-[-0.015em]">Aušrinė</h1>
@@ -107,11 +235,6 @@ export function App() {
             </p>
           </div>
         </div>
-      )}
-
-      {/* Dashboard overlay */}
-      {activeTool === 'dashboard' && dbReady && (
-        <DashboardScreen state={state} onComplete={handleComplete} onClose={() => setActiveTool(null)} />
       )}
 
       {/* Reward message */}
@@ -137,7 +260,38 @@ export function App() {
         </div>
       )}
 
-      <AppHeader taskCount={notes.length + tasks.length} />
+      {/* Trash zone */}
+      <TrashZone isActive={draggingId !== null} isOver={isOverTrash} />
+
+      {/* Undo toast */}
+      {undoTask && (
+        <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-30 animate-fade-in-up">
+          <div className="glass-popover px-4 py-2 flex items-center gap-3">
+            <p className="text-[13px] tracking-[-0.01em] text-gold-800">Note deleted</p>
+            <button
+              type="button"
+              onClick={handleUndo}
+              className="text-[12px] font-medium tracking-[0.02em] text-ausrine-accent hover:underline cursor-pointer"
+            >
+              Undo
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Canvas switcher */}
+      <CanvasSwitcher
+        boards={boards}
+        activeBoardId={activeBoardId}
+        activeBoardName={activeBoard?.name}
+        onSwitch={switchBoard}
+        onAdd={addBoard}
+      />
+
+      {/* Archive drawer */}
+      <ArchiveDrawer tasks={archivedTasks} isOpen={archiveOpen} onToggle={() => setArchiveOpen(!archiveOpen)} />
+
+      {dbReady && <AppHeader taskCount={tasks.length} />}
 
       <ToolBar>
         {/* Quick add */}
@@ -178,27 +332,6 @@ export function App() {
           label="Brain dump"
           isActive={activeTool === 'braindump'}
           onClick={() => setActiveTool(activeTool === 'braindump' ? null : 'braindump')}
-        />
-
-        {/* Dashboard */}
-        <ToolButton
-          icon={
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 16 16"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.3"
-              strokeLinecap="round"
-            >
-              <rect x="2" y="3" width="12" height="10" rx="1.5" />
-              <path d="M2 8H14" />
-            </svg>
-          }
-          label="Dashboard"
-          isActive={activeTool === 'dashboard'}
-          onClick={() => setActiveTool(activeTool === 'dashboard' ? null : 'dashboard')}
         />
 
         {/* Dark mode */}
@@ -259,6 +392,20 @@ export function App() {
       </ToolBar>
 
       <SerticodeBadge />
+
+      {/* Onboarding tour */}
+      {tour.isOpen && tour.current && (
+        <TourOverlay
+          step={tour.current}
+          stepIndex={tour.step}
+          total={tour.total}
+          onNext={tour.next}
+          onSkip={tour.skip}
+        />
+      )}
+
+      {/* Keyboard shortcuts */}
+      <ShortcutsPanel isOpen={shortcutsOpen} onClose={() => setShortcutsOpen(false)} />
     </div>
   );
 }
