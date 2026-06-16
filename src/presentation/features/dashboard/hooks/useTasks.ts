@@ -11,48 +11,6 @@ export type TasksState =
   | { status: 'success'; tasks: readonly Task[]; active: ActiveTasks }
   | { status: 'error'; error: string };
 
-const BOARDS_KEY = 'ausrine-boards';
-const ACTIVE_BOARD_KEY = 'ausrine-active-board';
-
-interface StoredBoard {
-  readonly id: string;
-  readonly name: string;
-}
-
-function loadBoards(): StoredBoard[] {
-  try {
-    const raw = localStorage.getItem(BOARDS_KEY);
-    if (raw) return JSON.parse(raw);
-  } catch {
-    /* noop */
-  }
-  return [];
-}
-
-function saveBoards(boards: readonly StoredBoard[]) {
-  try {
-    localStorage.setItem(BOARDS_KEY, JSON.stringify(boards));
-  } catch {
-    /* noop */
-  }
-}
-
-function getActiveBoardId(): string {
-  try {
-    const stored = localStorage.getItem(ACTIVE_BOARD_KEY);
-    if (stored) return stored;
-  } catch {
-    /* noop */
-  }
-  const boards = loadBoards();
-  if (boards.length > 0) return boards[0].id;
-  // Create default board
-  const id = crypto.randomUUID();
-  saveBoards([{ id, name: 'Main' }]);
-  localStorage.setItem(ACTIVE_BOARD_KEY, id);
-  return id;
-}
-
 interface UseTasksDeps {
   readonly createTask: (input: {
     readonly title: string;
@@ -68,6 +26,8 @@ interface UseTasksDeps {
   readonly getActiveTasks: (boardId: string) => Promise<Result<ActiveTasks>>;
   readonly completeTask: (task: Task) => Promise<Result<Task>>;
   readonly saveTask: (task: Task) => Promise<Result<Task>>;
+  readonly deleteTask: (id: string) => Promise<Result<void>>;
+  readonly activeBoardId: string;
 }
 
 const INITIAL_LAYOUT = {
@@ -78,16 +38,18 @@ const INITIAL_LAYOUT = {
   peekSpacing: 80,
 };
 
-export function useTasks({ createTask, getActiveTasks, completeTask, saveTask }: UseTasksDeps) {
-  const [state, setState] = useState<TasksState>({ status: 'idle' });
+export function useTasks({
+  createTask,
+  getActiveTasks,
+  completeTask,
+  saveTask,
+  deleteTask,
+  activeBoardId,
+}: UseTasksDeps) {
+  const [state, setState] = useState<TasksState>({ status: 'loading' });
   const tasksRef = useRef<readonly Task[]>([]);
   const activeTasksRef = useRef<ActiveTasks | null>(null);
   const lastDeletedRef = useRef<Task | null>(null);
-
-  const [boards, setBoards] = useState<readonly StoredBoard[]>(loadBoards);
-  const [activeBoardId, setActiveBoardId] = useState(getActiveBoardId);
-
-  const activeBoard = useMemo(() => boards.find((b) => b.id === activeBoardId) ?? boards[0], [boards, activeBoardId]);
 
   const setTasks = useCallback((tasks: readonly Task[], active: ActiveTasks) => {
     tasksRef.current = tasks;
@@ -95,13 +57,10 @@ export function useTasks({ createTask, getActiveTasks, completeTask, saveTask }:
     setState({ status: 'success', tasks, active });
   }, []);
 
-  const load = useCallback(async () => {
-    setState({ status: 'loading' });
-    const result = await getActiveTasks(activeBoardId);
+  const processResult = useCallback((result: Awaited<ReturnType<typeof getActiveTasks>>) => {
     if (result.ok) {
       const { today, carryOver, priority } = result.value;
-      // Auto-position tasks that don't have canvas positions
-      let nextX = INITIAL_LAYOUT.focusX;
+      const nextX = INITIAL_LAYOUT.focusX;
       let nextY = INITIAL_LAYOUT.focusY;
       const all: Task[] = [];
 
@@ -113,7 +72,6 @@ export function useTasks({ createTask, getActiveTasks, completeTask, saveTask }:
           all.push(t);
         }
       }
-      // Place carry-overs to the right
       const carryX = INITIAL_LAYOUT.peekOffsetX;
       let carryY = INITIAL_LAYOUT.focusY;
       for (const t of carryOver) {
@@ -139,11 +97,21 @@ export function useTasks({ createTask, getActiveTasks, completeTask, saveTask }:
     } else {
       setState({ status: 'error', error: result.error });
     }
-  }, [getActiveTasks, activeBoardId]);
+  }, []);
+
+  const fetchTasks = useCallback(() => {
+    getActiveTasks(activeBoardId).then(processResult);
+  }, [getActiveTasks, activeBoardId, processResult]);
+
+  const load = useCallback(async () => {
+    setState({ status: 'loading' });
+    const result = await getActiveTasks(activeBoardId);
+    processResult(result);
+  }, [getActiveTasks, activeBoardId, processResult]);
 
   useEffect(() => {
-    load();
-  }, [load]);
+    fetchTasks();
+  }, [fetchTasks]);
 
   const addTask = useCallback(
     async (title: string, color: NoteColor, canvasX = 0, canvasY = 0) => {
@@ -208,42 +176,42 @@ export function useTasks({ createTask, getActiveTasks, completeTask, saveTask }:
       const next = tasksRef.current.filter((t) => t.id !== task.id);
       const active = activeTasksRef.current;
       if (active) setTasks(next, active);
+      await deleteTask(task.id);
     },
-    [setTasks],
+    [setTasks, deleteTask],
   );
 
-  const undoRemoveTask = useCallback(() => {
+  const undoRemoveTask = useCallback(async () => {
     const deleted = lastDeletedRef.current;
     if (!deleted) return;
     lastDeletedRef.current = null;
-    const updated = [...tasksRef.current];
-    const insertAt = Math.min(deleted.position, updated.length);
-    updated.splice(insertAt, 0, deleted);
-    const active = activeTasksRef.current;
-    if (active) setTasks(updated, active);
-  }, [setTasks]);
+    const result = await createTask({
+      title: deleted.title,
+      color: deleted.color,
+      boardId: deleted.boardId,
+      position: deleted.position,
+      canvasX: deleted.canvasX,
+      canvasY: deleted.canvasY,
+      noteWidth: deleted.noteWidth,
+      noteHeight: deleted.noteHeight,
+      isTodo: deleted.isTodo,
+    });
+    if (result.ok) {
+      await load();
+    }
+  }, [createTask, load]);
 
-  // Board management
-  const addBoard = useCallback(
-    (name: string) => {
-      const id = crypto.randomUUID();
-      const next = [...boards, { id, name }];
-      setBoards(next);
-      saveBoards(next);
-      setActiveBoardId(id);
-      localStorage.setItem(ACTIVE_BOARD_KEY, id);
+  const deleteArchivedTask = useCallback(
+    async (id: string) => {
+      await deleteTask(id);
+      await load();
     },
-    [boards],
+    [deleteTask, load],
   );
 
-  const switchBoard = useCallback((id: string) => {
-    setActiveBoardId(id);
-    localStorage.setItem(ACTIVE_BOARD_KEY, id);
-  }, []);
-
   const archivedTasks = useMemo(() => {
-    const active = activeTasksRef.current;
-    return active?.archived ?? [];
+    if (state.status === 'success') return state.active.archived;
+    return [];
   }, [state]);
 
   return {
@@ -255,13 +223,9 @@ export function useTasks({ createTask, getActiveTasks, completeTask, saveTask }:
     updateTask,
     removeTask,
     undoRemoveTask,
+    deleteArchivedTask,
     reload: load,
     tasks: tasksRef,
-    boards,
-    activeBoardId,
-    activeBoard,
-    addBoard,
-    switchBoard,
     archivedTasks,
   };
 }

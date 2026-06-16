@@ -46,7 +46,7 @@ export function getActiveTasks(taskRepo: TaskRepository) {
     todayTasks.sort((a, b) => a.position - b.position);
     carryOver.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
     priority.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
-    archived.sort((a, b) => b.completedAt!.getTime() - a.completedAt!.getTime());
+    archived.sort((a, b) => (b.completedAt?.getTime() ?? 0) - (a.completedAt?.getTime() ?? 0));
 
     return { ok: true, value: { today: todayTasks, carryOver, priority, archived } };
   };

@@ -17,7 +17,8 @@ export function useReward() {
     if (bag.length === 0) {
       bag = MESSAGES.map((_, i) => i).sort(() => Math.random() - 0.5);
     }
-    const index = bag.pop()!;
+    const index = bag.pop();
+    if (index === undefined) return;
     bagRef.current = bag;
     setMessage(MESSAGES[index]);
   }, []);

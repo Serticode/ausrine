@@ -10,8 +10,7 @@ export function ToolBar({ children }: ToolBarProps) {
       <div
         className="toolbar-pill flex items-center gap-1"
         style={{
-          padding: '8px 20px',
-          minWidth: '360px',
+          padding: '8px 16px',
         }}
       >
         {children}

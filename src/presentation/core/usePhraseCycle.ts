@@ -8,33 +8,40 @@ const EXIT_MS = 400;
 
 type Phase = 'entering' | 'visible' | 'exiting';
 
+function delay(ms: number): Promise<void> {
+  return new Promise((r) => setTimeout(r, ms));
+}
+
 export function usePhraseCycle() {
   const [phraseIndex, setPhraseIndex] = useState(0);
   const [phase, setPhase] = useState<Phase>('entering');
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const cancelledRef = useRef(false);
 
   useEffect(() => {
-    let cancelled = false;
-    function scheduleCycle() {
-      timerRef.current = setTimeout(() => {
-        if (cancelled) return;
+    cancelledRef.current = false;
+
+    async function cycle() {
+      while (!cancelledRef.current) {
+        setPhase('entering');
+        await delay(ENTER_MS);
+        if (cancelledRef.current) return;
+
         setPhase('visible');
-        timerRef.current = setTimeout(() => {
-          if (cancelled) return;
-          setPhase('exiting');
-          timerRef.current = setTimeout(() => {
-            if (cancelled) return;
-            setPhraseIndex((i) => (i + 1) % PHRASES.length);
-            setPhase('entering');
-            scheduleCycle();
-          }, EXIT_MS);
-        }, VISIBLE_MS);
-      }, ENTER_MS);
+        await delay(VISIBLE_MS);
+        if (cancelledRef.current) return;
+
+        setPhase('exiting');
+        await delay(EXIT_MS);
+        if (cancelledRef.current) return;
+
+        setPhraseIndex((i) => (i + 1) % PHRASES.length);
+      }
     }
-    scheduleCycle();
+
+    cycle();
+
     return () => {
-      cancelled = true;
-      if (timerRef.current !== null) clearTimeout(timerRef.current);
+      cancelledRef.current = true;
     };
   }, []);
 

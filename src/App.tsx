@@ -1,30 +1,36 @@
 import { useCallback, useState, useRef, useEffect } from 'react';
 
-import { AppHeader } from '@/presentation/components/AppHeader.tsx';
-import { EndlessCanvas } from '@/presentation/components/EndlessCanvas.tsx';
-import { CanvasNote } from '@/presentation/components/CanvasNote.tsx';
-import { TrashZone } from '@/presentation/components/TrashZone.tsx';
-import { CanvasSwitcher } from '@/presentation/components/CanvasSwitcher.tsx';
-import { ArchiveDrawer } from '@/presentation/components/ArchiveDrawer.tsx';
-import { TourOverlay } from '@/presentation/components/TourOverlay.tsx';
-import { ShortcutsPanel } from '@/presentation/components/ShortcutsPanel.tsx';
-import { SerticodeBadge } from '@/presentation/components/SerticodeBadge.tsx';
-import { ToolBar } from '@/presentation/components/ToolBar.tsx';
-import { usePhraseCycle } from '@/presentation/core/usePhraseCycle.ts';
-import { useTheme } from '@/presentation/core/useTheme.ts';
-import { useDatabase } from '@/presentation/core/useDatabase.ts';
-import { useTour } from '@/presentation/core/useTour.ts';
-import { useTasks } from '@/presentation/features/dashboard/hooks/useTasks.ts';
-import { useReward } from '@/presentation/features/dashboard/hooks/useReward.ts';
-import { TaskInput } from '@/presentation/features/dashboard/components/TaskInput.tsx';
-import { BrainDump } from '@/presentation/features/dashboard/components/BrainDump.tsx';
-import { brainDump as parseBrainDump } from '@/domain/use-cases/brainDump.ts';
+import {
+  AppHeader,
+  EndlessCanvas,
+  CanvasNote,
+  TrashZone,
+  CanvasSwitcher,
+  ArchiveDrawer,
+  TourOverlay,
+  ShortcutsPanel,
+  SerticodeBadge,
+  ToolBar,
+  TaskInput,
+  BrainDump,
+  usePhraseCycle,
+  useTheme,
+  useDatabase,
+  useTour,
+  useTasks,
+  useBoards,
+  useReward,
+  parseBrainDump,
+} from '@/presentation/components/AppDependencies.ts';
+import { ToolButton } from '@/presentation/components/ToolButton.tsx';
+
 import type { NoteColor } from '@/domain/models/NoteColor.ts';
 import type { Task } from '@/domain/models/Task.ts';
 
 const STAGGER_ENTER = 25;
 const STAGGER_EXIT = 25.5;
 const UNDO_TIMEOUT_MS = 5000;
+const EMPTY_TASKS: readonly Task[] = [];
 
 type ActiveTool = 'add' | 'braindump' | null;
 
@@ -39,7 +45,9 @@ function daysSince(date: Date): number {
 export function App() {
   const { phraseIndex, phase, words } = usePhraseCycle();
   const { isDark, toggleTheme } = useTheme();
-  const { dbReady, createTaskUseCase, getActiveTasksUseCase, completeTaskUseCase, saveTaskUseCase } = useDatabase();
+  const { dbReady, createTaskUseCase, getActiveTasksUseCase, completeTaskUseCase, saveTaskUseCase, deleteTaskUseCase } =
+    useDatabase();
+  const { boards, activeBoardId, activeBoard, addBoard, removeBoard, switchBoard } = useBoards();
   const {
     state,
     addTask,
@@ -49,17 +57,15 @@ export function App() {
     updateTask,
     removeTask,
     undoRemoveTask,
-    boards,
-    activeBoardId,
-    activeBoard,
-    addBoard,
-    switchBoard,
+    deleteArchivedTask,
     archivedTasks,
   } = useTasks({
     createTask: createTaskUseCase,
     getActiveTasks: getActiveTasksUseCase,
     completeTask: completeTaskUseCase,
     saveTask: saveTaskUseCase,
+    deleteTask: deleteTaskUseCase,
+    activeBoardId,
   });
   const { message: rewardMessage, trigger: triggerReward, dismiss: dismissReward } = useReward();
 
@@ -102,7 +108,7 @@ export function App() {
     };
   }, []);
 
-  const tasks = state.status === 'success' ? state.tasks : [];
+  const tasks = state.status === 'success' ? state.tasks : EMPTY_TASKS;
 
   const handleCanvasDoubleClick = useCallback(
     async (worldX: number, worldY: number) => {
@@ -286,10 +292,16 @@ export function App() {
         activeBoardName={activeBoard?.name}
         onSwitch={switchBoard}
         onAdd={addBoard}
+        onRemove={removeBoard}
       />
 
       {/* Archive drawer */}
-      <ArchiveDrawer tasks={archivedTasks} isOpen={archiveOpen} onToggle={() => setArchiveOpen(!archiveOpen)} />
+      <ArchiveDrawer
+        tasks={archivedTasks}
+        isOpen={archiveOpen}
+        onToggle={() => setArchiveOpen(!archiveOpen)}
+        onDelete={deleteArchivedTask}
+      />
 
       {dbReady && <AppHeader taskCount={tasks.length} />}
 
@@ -407,28 +419,5 @@ export function App() {
       {/* Keyboard shortcuts */}
       <ShortcutsPanel isOpen={shortcutsOpen} onClose={() => setShortcutsOpen(false)} />
     </div>
-  );
-}
-
-interface ToolButtonProps {
-  readonly icon: React.ReactNode;
-  readonly label: string;
-  readonly isActive?: boolean;
-  readonly onClick?: () => void;
-}
-
-function ToolButton({ icon, label, isActive, onClick }: ToolButtonProps) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`flex items-center justify-center w-8 h-8 rounded-full transition-shadow transition-transform duration-150 ease-out active:scale-[0.92] cursor-pointer text-gold-900 dark:text-white ${
-        isActive ? 'shadow-[0_0_0_2px_rgba(200,138,58,0.2)]' : 'hover:bg-black/5 dark:hover:bg-white/10'
-      }`}
-      title={label}
-      aria-label={label}
-    >
-      {icon}
-    </button>
   );
 }
