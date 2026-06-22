@@ -1,20 +1,17 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <!-- Background -->
-  <rect width="32" height="32" rx="6" fill="#171717"/>
-
-  <!-- Outer star -->
-  <path
-    d="M16 5 Q 21 12 27 16 Q 21 20 16 27 Q 11 20 5 16 Q 11 12 16 5 Z"
-    fill="#c8a96e"
-    stroke="#b3975e"
-    stroke-width="1.5"
-    stroke-linejoin="round"
-  />
-
-  <!-- Inner glow — lighter gold highlight -->
-  <path
-    d="M16 10 Q 19 13 22 16 Q 19 19 16 22 Q 13 19 10 16 Q 13 13 16 10 Z"
-    fill="#d9c07f"
-    opacity="0.7"
-  />
+  <rect width="32" height="32" rx="6" fill="#c4523c" />
+  <g transform="translate(16, 16) scale(0.7) translate(-16, -16)">
+    <path
+      d="M16 5 Q 21 12 27 16 Q 21 20 16 27 Q 11 20 5 16 Q 11 12 16 5 Z"
+      fill="#ffffff"
+      stroke="#f5f0eb"
+      stroke-width="1.5"
+      stroke-linejoin="round"
+    />
+    <path
+      d="M16 10 Q 19 13 22 16 Q 19 19 16 22 Q 13 19 10 16 Q 13 13 16 10 Z"
+      fill="#ffffff"
+      opacity="0.7"
+    />
+  </g>
 </svg>
