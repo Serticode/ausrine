@@ -16,7 +16,7 @@ jobs:
       pull-requests: write
       contents: read
     steps:
-      - uses: Homebrew/actions/limit-pull-requests@65e77dd780fb5f9ea82af068d3b24eccd13aebee
+      - uses: Homebrew/actions/limit-pull-requests@8f3d1ec8a696b3b9d9a6c3696b6c73033cab69e4
         with:
           comment-limit: 3
           comment: >
